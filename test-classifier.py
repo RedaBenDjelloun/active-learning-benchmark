@@ -20,31 +20,34 @@ from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.inspection import DecisionBoundaryDisplay
+from sklearn.linear_model import LogisticRegression
 
 names = [
-    "Nearest Neighbors",
+    "Logistic Regression",
+    #"Nearest Neighbors",
     "Linear SVM",
-    "RBF SVM",
-    "Gaussian Process",
-    "Decision Tree",
-    "Random Forest",
-    "Neural Net",
-    "AdaBoost",
+    #"RBF SVM",
+    #"Gaussian Process",
+    #"Decision Tree",
+    #"Random Forest",
+    #"Neural Net",
+    #"AdaBoost",
     "Naive Bayes",
-    "QDA",
+    #"QDA",
 ]
 
 classifiers = [
-    KNeighborsClassifier(3),
+    LogisticRegression(),
+    #KNeighborsClassifier(3),
     SVC(kernel="linear", C=0.025),
-    SVC(gamma=2, C=1),
-    GaussianProcessClassifier(1.0 * RBF(1.0)),
-    DecisionTreeClassifier(max_depth=5),
-    RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-    MLPClassifier(alpha=1, max_iter=1000),
-    AdaBoostClassifier(),
+    #SVC(gamma=2, C=1),
+    #GaussianProcessClassifier(1.0 * RBF(1.0)),
+    #DecisionTreeClassifier(max_depth=5),
+    #RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
+    #MLPClassifier(alpha=1, max_iter=1000),
+    #AdaBoostClassifier(),
     GaussianNB(),
-    QuadraticDiscriminantAnalysis(),
+    #QuadraticDiscriminantAnalysis(),
 ]
 
 X, y = make_classification(
