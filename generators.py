@@ -3,18 +3,20 @@ import random
 import matplotlib.pyplot as plt
 
 class Generator:
+    def __init__(self):
+        pass
+
     def __call__(self):
         pass
 
 class GaussianGenerator(Generator):
-    def __init__(self, mean, std):
+    def __init__(self, mean, std, dimension=None):
         super().__init__()
         self.mean = mean
         self.std = std
-
-    @property
-    def dimension(self):
-        return self.mean.shape[0]
+        self.dimension = dimension
+        if dimension is None:
+            self.dimension = self.mean.shape[0]
     
     def __call__(self):
         return np.random.normal(self.mean,self.std,self.dimension)
@@ -102,8 +104,9 @@ def gauss_generator(dimension=2,nb_class=2,std=1):
     return DataGenerators(generators,class_generator)
 
 def unit_sphere_test(dimension):
-    x = np.random.random(dimension)-0.5
-    x = x/np.sqrt(np.dot(x,x))
+    x = np.random.normal(0,1,dimension)
+    norm = np.sqrt(np.dot(x,x))
+    x = x/norm
     return x
 
 
