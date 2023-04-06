@@ -56,7 +56,9 @@ class SumGenerator(Generator):
         return sum([generator() for generator in self.generators])
     
 class UnionGenerator(Generator):
-    def __init__(self,generators,probas):
+    def __init__(self,generators,probas=None):
+        if probas is None:
+            probas = np.ones(len(generators))/len(generators)
         assert abs(sum(probas)-1)<1e-3
         self.probas = probas
         self.generators = generators
