@@ -3,6 +3,8 @@
 # Modified for documentation by Jaques Grobler
 # License: BSD 3 clause
 
+import generators as gn
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -57,10 +59,26 @@ rng = np.random.RandomState(2)
 X += 2 * rng.uniform(size=X.shape)
 linearly_separable = (X, y)
 
+generators_list = []
+generators_list.append(gn.GaussianGenerator(np.zeros(2),0.3))
+generators_list.append(gn.UniformGenerator(np.array([-3,-3]),np.array([-1,-1])))
+class_generator = gn.Discrete1DUniformGenerator(len(generators_list))
+data_generator = gn.DataGenerators(generators_list,class_generator)
+
+generators_list_2 = []
+generators_list_2.append(gn.GaussianGenerator(np.zeros(2),0.3))
+f = lambda :gn.unit_sphere_test(2)
+generators_list_2.append(gn.SumGenerator([gn.CustomGenerator(f),gn.GaussianGenerator(np.zeros(2),0.1)]))
+class_generator_2 = gn.Discrete1DUniformGenerator(len(generators_list_2))
+data_generator_2 = gn.DataGenerators(generators_list_2,class_generator_2)
+
 datasets = [
     make_moons(noise=0.3, random_state=0),
     make_circles(noise=0.2, factor=0.5, random_state=1),
     linearly_separable,
+    data_generator.generate_data(200),
+    data_generator_2.generate_data(200),
+    gn.gauss_generator(std=0.5).generate_data(200)
 ]
 
 figure = plt.figure(figsize=(27, 9))
