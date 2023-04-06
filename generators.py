@@ -72,9 +72,12 @@ class UnionGenerator(Generator):
 
 
 class DataGenerators:
-    def __init__(self,generators,class_generator):
+    def __init__(self,generators,class_generator=None):
         self.generators = generators
-        self.class_generator = class_generator
+        if class_generator is None:
+            self.class_generator = Discrete1DUniformGenerator(len(generators))
+        else:
+            self.class_generator = class_generator
         self.dimension = len(self.generators[0]())
 
     @property
