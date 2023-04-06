@@ -21,6 +21,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.linear_model import LogisticRegression
+import generators
 
 names = [
     "Logistic Regression",
@@ -50,6 +51,19 @@ classifiers = [
     #QuadraticDiscriminantAnalysis(),
 ]
 
+data_gens = []
+
+gen = []
+gen.append(generators.GaussianGenerator(np.zeros(2),0.3))
+f = lambda :generators.unit_sphere_test(2)
+gen.append(generators.SumGenerator([generators.CustomGenerator(f),generators.GaussianGenerator(np.zeros(2),0.1)]))
+data_gens.append(generators.DataGenerators(gen))
+
+gen = []
+gen.append(generators.GaussianGenerator(np.array([1,0]),1))
+gen.append(generators.GaussianGenerator(np.array([-1,0]),1))
+data_gens.append(generators.DataGenerators(gen))
+
 X, y = make_classification(
     n_features=2, n_redundant=0, n_informative=2, random_state=1, n_clusters_per_class=1
 )
@@ -57,11 +71,7 @@ rng = np.random.RandomState(2)
 X += 2 * rng.uniform(size=X.shape)
 linearly_separable = (X, y)
 
-datasets = [
-    make_moons(noise=0.3, random_state=0),
-    make_circles(noise=0.2, factor=0.5, random_state=1),
-    linearly_separable,
-]
+datasets = [data_gen.generate_data(100) for data_gen in data_gens]
 
 figure = plt.figure(figsize=(27, 9))
 i = 1
