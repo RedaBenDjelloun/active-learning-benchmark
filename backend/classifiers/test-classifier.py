@@ -21,7 +21,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.linear_model import LogisticRegression
-import generators as gnr
+import backend.generators.generators as gnr
 
 names = [
     "Logistic Regression",
