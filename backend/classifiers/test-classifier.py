@@ -21,7 +21,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.linear_model import LogisticRegression
-import backend.generators.generators as gnr
+from generators.generator import GaussianGenerator, SumGenerator, UnionGenerator, DataGenerators, CustomGenerator, unit_sphere_test
 
 names = [
     "Logistic Regression",
@@ -54,20 +54,20 @@ classifiers = [
 data_gens = []
 
 gen = []
-gen.append(gnr.GaussianGenerator(np.zeros(2),0.3))
-f = lambda :gnr.unit_sphere_test(2)
-gen.append(gnr.SumGenerator([gnr.CustomGenerator(f),gnr.GaussianGenerator(np.zeros(2),0.1)]))
-data_gens.append(gnr.DataGenerators(gen))
+gen.append(GaussianGenerator(np.zeros(2),0.3))
+f = lambda :unit_sphere_test(2)
+gen.append(SumGenerator([CustomGenerator(f),GaussianGenerator(np.zeros(2),0.1)]))
+data_gens.append(DataGenerators(gen))
 
 gen = []
-gen.append(gnr.GaussianGenerator(np.array([1,0]),1))
-gen.append(gnr.GaussianGenerator(np.array([-1,0]),1))
-data_gens.append(gnr.DataGenerators(gen))
+gen.append(GaussianGenerator(np.array([1,0]),1))
+gen.append(GaussianGenerator(np.array([-1,0]),1))
+data_gens.append(DataGenerators(gen))
 
 gen = []
-gen.append(gnr.UnionGenerator([gnr.GaussianGenerator(np.array([1,0]),0.5),gnr.GaussianGenerator(np.array([-1,0]),0.5)]))
-gen.append(gnr.UnionGenerator([gnr.GaussianGenerator(np.array([0,1]),0.5),gnr.GaussianGenerator(np.array([0,-1]),0.5)]))
-data_gens.append(gnr.DataGenerators(gen))
+gen.append(UnionGenerator([GaussianGenerator(np.array([1,0]),0.5),GaussianGenerator(np.array([-1,0]),0.5)]))
+gen.append(UnionGenerator([GaussianGenerator(np.array([0,1]),0.5),GaussianGenerator(np.array([0,-1]),0.5)]))
+data_gens.append(DataGenerators(gen))
 
 X, y = make_classification(
     n_features=2, n_redundant=0, n_informative=2, random_state=1, n_clusters_per_class=1
