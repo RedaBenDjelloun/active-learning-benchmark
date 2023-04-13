@@ -125,6 +125,20 @@ def test():
     class_generator = Discrete1DUniformGenerator(len(generators))
     return DataGenerators(generators,class_generator)
 
+def two_gaussians(dim,std):
+    target = np.zeros(dim)
+    target[0] = 1
+    lst_gen = []
+    lst_gen.append(GaussianGenerator(target,std))
+    lst_gen.append(GaussianGenerator(-target,std))
+    return DataGenerators(lst_gen)
+
+def not_convex(dim,noise=0.1):
+    generators.append(GaussianGenerator(np.zeros(dim),1))
+    f = lambda :unit_sphere_test(dim)
+    generators.append(SumGenerator([CustomGenerator(f),GaussianGenerator(np.zeros(dim),noise)]))
+
+
 def display_classes(X,y):
     color_names = ["red","blue","green","orange"]
     colors = [color_names[i] for i in y]
