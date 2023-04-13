@@ -3,30 +3,31 @@ from modAL.uncertainty import uncertainty_sampling
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
-from generators.generator import GaussianGenerator, DataGenerators
+from generators.generator import GaussianGenerator, DataGenerators, not_convex
 from matplotlib import pyplot as plt
 import numpy as np
 
-dim = 200
-classifier = LogisticRegression
+dim = 2
+classifier = GaussianNB
 
-std = 0.5
 target = np.zeros(dim)
 target[0] = 1
 
 basic_train = 10
 size_train = 1000
 size_val = 1000
-max_size = 400
+max_size = 300
 
-std = np.ones(dim)
+std = np.ones(dim)*1
 std[0] = 0.2
 
 # Construct generator
-lst_gen = []
-lst_gen.append(GaussianGenerator(target,std))
-lst_gen.append(GaussianGenerator(-target,std))
-data_gen = DataGenerators(lst_gen)
+# lst_gen = []
+# lst_gen.append(GaussianGenerator(target,std))
+# lst_gen.append(GaussianGenerator(-target,std))
+# data_gen = DataGenerators(lst_gen)
+
+data_gen = not_convex(dim)
 
 # Construct active learner
 learner = ActiveLearner(
