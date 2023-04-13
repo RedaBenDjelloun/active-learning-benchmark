@@ -134,10 +134,12 @@ def two_gaussians(dim,std):
     return DataGenerators(lst_gen)
 
 def not_convex(dim,noise=0.1):
-    generators.append(GaussianGenerator(np.zeros(dim),1))
+    generators = []
+    center_std = 0.5
+    generators.append(GaussianGenerator(np.zeros(dim),center_std))
     f = lambda :unit_sphere_test(dim)
     generators.append(SumGenerator([CustomGenerator(f),GaussianGenerator(np.zeros(dim),noise)]))
-
+    return DataGenerators(generators)
 
 def display_classes(X,y):
     color_names = ["red","blue","green","orange"]
