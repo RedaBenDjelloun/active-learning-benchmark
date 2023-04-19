@@ -6,64 +6,99 @@ class Generator:
     def __init__(self):
         pass
 
-    def __call__(self):
+    def __call__(self,t=None):
+        pass
+
+    def update(self,t):
         pass
 
 class GaussianGenerator(Generator):
-    def __init__(self, mean, std, dimension=None):
+    def __init__(self, mean=None, std=None, dimension=None, updator=None, t=0):
         super().__init__()
         self.mean = mean
         self.std = std
         self.dimension = dimension
+        self.updator = updator
+        # initialize with updator at time=t
+        self.update(t)
+        # detect dimension using shape of mean
         if dimension is None:
             self.dimension = self.mean.shape[0]
     
-    def __call__(self):
+    def __call__(self, t=None):
+        if t is not None:
+            self.update(t)
         return np.random.normal(self.mean,self.std,self.dimension)
+    
+    def update(self,t):
+        if self.updator is not None:
+            self.mean, self.std = self.updator(t)
 
 class Discrete1DUniformGenerator(Generator):
     def __init__(self,n):
         super().__init__()
         self.n = n
     
-    def __call__(self):
+    def __call__(self,t=None):
         return random.randint(0,self.n-1)
+
+    def update(self,t):
+        pass
     
 class UniformGenerator(Generator):
-    def __init__(self,a,b):
+    def __init__(self,a,b,updator=None,t=0):
         super().__init__()
         self.a = a 
         self.b = b
+        self.updator = updator
+        # initialize with updator at time=t
+        self.update(t)
     
-    def __call__(self):
+    def __call__(self, t=None):
+        if t is not None:
+            self.update(t)
         return (self.a-self.b)*np.random.random(len(self.a))+self.b
 
+    def update(self,t):
+        if self.updator is not None:
+            a, b = updator(t)
 
 class CustomGenerator(Generator):
-    def __init__(self, f):
+    def __init__(self, f, time_dependant=False):
         super().__init__()
         self.f = f
+        self.time_dependant = time_dependant
 
-    def __call__(self):
-        return self.f()
+    def __call__(self,t=None):
+        if self.time_dependant:
+            return self.f(t)
+        else:
+            return self.f()
+
+    def update(self,t):
+        pass
 
 class SumGenerator(Generator):
     def __init__(self,generators):
         super().__init__()
         self.generators = generators
 
-    def __call__(self):
-        return sum([generator() for generator in self.generators])
-    
+    def __call__(self,t=None):
+        return sum([generator(t) for generator in self.generators])
+
+    def update(self,t):
+        for generator in self.generators:
+            generator.update(t)
+
 class UnionGenerator(Generator):
     def __init__(self,generators,probas=None):
         if probas is None:
             probas = np.ones(len(generators))/len(generators)
-        assert abs(sum(probas)-1)<1e-3
+        assert abs(sum(probas)-1)<1e-3 #assert that the sum of probas is 1
         self.probas = probas
         self.generators = generators
 
-    def __call__(self):
+    def __call__(self,t=None):
         u = np.random.random()
         acc=0
         for (i,p_i) in enumerate(self.probas):
@@ -71,6 +106,10 @@ class UnionGenerator(Generator):
             if acc>u:
                 return self.generators[i]()
         return self.generators[-1]()
+    
+    def update(self,t):
+        for generator in self.generators:
+            generator.update(t)
 
 
 class DataGenerators:
@@ -86,13 +125,19 @@ class DataGenerators:
     def nb_class(self):
         return len(self.generators)
 
-    def generate_data(self,quantity):
+    def generate_data(self,quantity, t=None):
         X = np.zeros((quantity,self.dimension),float)
         y = np.zeros((quantity),int)
+        if t is not None:
+            self.update(t)
         for i in range(quantity):
             y[i] = self.class_generator()
             X[i] = self.generators[y[i]]()
         return X, y
+
+    def update(self,t):
+        for generator in self.generators:
+            generator.update(t)
 
 def gauss_generator(dimension=2,nb_class=2,std=1):
     mean = np.zeros((nb_class,dimension))
@@ -152,9 +197,24 @@ def display_classes(X,y):
 
 if __name__ == "__main__":
 
-    data_generator = test()
+    # data_generator = test()
 
-    X,y  = data_generator.generate_data(1000)
+    # X,y  = data_generator.generate_data(1000)
 
+    # display_classes(X,y)
+
+    f1 = lambda t: (np.array([0,t]),1)
+    f2 = lambda t: (np.array([0,-t]),1)
+    gens = []
+    gens.append(GaussianGenerator(updator=f1))
+    gens.append(GaussianGenerator(updator=f2))
+
+    data_generator = DataGenerators(gens)
+
+    X,y  = data_generator.generate_data(100)
     display_classes(X,y)
+    X,y  = data_generator.generate_data(100,t=10)
+    display_classes(X,y)
+
+    
 
