@@ -142,7 +142,7 @@ def not_convex(dim,noise=0.1):
     return DataGenerators(generators)
 
 def display_classes(X,y):
-    color_names = ["red","blue","green","orange"]
+    color_names = "rgbcmykw"
     colors = [color_names[i] for i in y]
 
     plt.scatter(X[:,0], X[:,1], color = colors)
