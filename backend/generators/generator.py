@@ -139,6 +139,23 @@ class DataGenerators:
         for generator in self.generators:
             generator.update(t)
 
+class DataGeneratorsWithHiddenFunction:
+    def __init__(self,generator,hidden_f,nb_class=2):
+        self.generator = generator
+        self.hidden_f = hidden_f
+        self.nb_class = nb_class
+        self.dimension = len(self.generator())
+
+    def generate_data(self,quantity, t=None):
+        X = np.zeros((quantity,self.dimension),float)
+        y = np.zeros((quantity),int)
+        if t is not None:
+            self.update(t)
+        for i in range(quantity):
+            X[i] = self.generator()
+            y[i] = self.hidden_f(X[i])
+        return X, y
+
 def gauss_generator(dimension=2,nb_class=2,std=1):
     mean = np.zeros((nb_class,dimension))
     generators = []
@@ -170,6 +187,16 @@ def test():
     class_generator = Discrete1DUniformGenerator(len(generators))
     return DataGenerators(generators,class_generator)
 
+def test2():
+    generator = UniformGenerator(np.zeros(2),np.ones(2))
+    f = lambda X: X[0]+X[1]>1
+    return DataGeneratorsWithHiddenFunction(generator,f)
+
+def separation_on_uniform(dim=2):
+    generator = UniformGenerator(np.zeros(dim),np.ones(dim))
+    f = lambda X: np.sum(X)>len(X)/2
+    return DataGeneratorsWithHiddenFunction(generator,f)
+
 def two_gaussians(dim,std):
     target = np.zeros(dim)
     target[0] = 1
@@ -197,24 +224,24 @@ def display_classes(X,y):
 
 if __name__ == "__main__":
 
-    # data_generator = test()
+    data_generator = separation_on_uniform()
 
-    # X,y  = data_generator.generate_data(1000)
+    X,y  = data_generator.generate_data(1000)
 
+    display_classes(X,y)
+
+    # f1 = lambda t: (np.array([-1+t,0]),0.1)
+    # f2 = lambda t: (np.array([1-t,0]),0.1)
+    # gens = []
+    # gens.append(GaussianGenerator(updator=f1))
+    # gens.append(GaussianGenerator(updator=f2))
+
+    # data_generator = DataGenerators(gens)
+
+    # X,y  = data_generator.generate_data(100)
     # display_classes(X,y)
-
-    f1 = lambda t: (np.array([0,t]),1)
-    f2 = lambda t: (np.array([0,-t]),1)
-    gens = []
-    gens.append(GaussianGenerator(updator=f1))
-    gens.append(GaussianGenerator(updator=f2))
-
-    data_generator = DataGenerators(gens)
-
-    X,y  = data_generator.generate_data(100)
-    display_classes(X,y)
-    X,y  = data_generator.generate_data(100,t=10)
-    display_classes(X,y)
+    # X,y  = data_generator.generate_data(100,t=0.5)
+    # display_classes(X,y)
 
     
 
