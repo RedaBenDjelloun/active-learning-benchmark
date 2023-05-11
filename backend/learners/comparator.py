@@ -1,9 +1,12 @@
 from modAL.models import ActiveLearner
 from modAL.uncertainty import uncertainty_sampling
+
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
+
 from generators.generator import GaussianGenerator, DataGenerators, not_convex
+
 from matplotlib import pyplot as plt
 import numpy as np
 
