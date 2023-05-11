@@ -150,11 +150,12 @@ class DataGeneratorsWithHiddenFunction:
         X = np.zeros((quantity,self.dimension),float)
         y = np.zeros((quantity),int)
         if t is not None:
-            self.update(t)
+            self.generator.update(t)
         for i in range(quantity):
             X[i] = self.generator()
-            y[i] = self.hidden_f(X[i])
+            y[i] = self.hidden_f(X[i],t)
         return X, y
+    
 
 def gauss_generator(dimension=2,nb_class=2,std=1):
     mean = np.zeros((nb_class,dimension))
@@ -194,11 +195,10 @@ def test2():
 
 def separation_on_uniform(dim=2):
     generator = UniformGenerator(np.zeros(dim),np.ones(dim))
-    f = lambda X: np.sum(X)>len(X)/2
+    f = lambda X,t: np.sum(X)>len(X)/2
     return DataGeneratorsWithHiddenFunction(generator,f)
 
 def two_gaussians(dim,std):
-    target = np.zeros(dim)
     target[0] = 1
     lst_gen = []
     lst_gen.append(GaussianGenerator(target,std))
