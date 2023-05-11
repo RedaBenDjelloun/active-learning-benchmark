@@ -1,9 +1,12 @@
 from modAL.models import ActiveLearner
 from modAL.uncertainty import uncertainty_sampling
+
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
+
 from generators.generator import GaussianGenerator, DataGenerators, not_convex
+
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -76,10 +79,8 @@ def create_SVC():
 
 dim = 100
 data_generator = create_two_gaussians(dim=dim, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
-#data_generator = not_convex(dim)
 classifier = LogisticRegression
 query_strategy=uncertainty_sampling
-
 basic_train = 10
 nb_queries = 290
 size_train = 1000
@@ -87,17 +88,25 @@ size_val = 1000
 
 #do_benchmark(data_generator, classifier, query_strategy, basic_train, nb_queries, size_train, size_val)
 
+# Function that does all of the above
+def compare_learning_curves(dim_values, classifier_values, classifier_names, query_strategy, basic_train, nb_queries, size_train, size_val):
+    fig = plt.figure()
+    for (clf_idx, classifier) in enumerate(classifier_values):
+        for (dim_idx, dim) in enumerate(dim_values):
+            data_generator = create_two_gaussians(dim=dim, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
+            ax = fig.add_subplot(3,4,1+dim_idx+clf_idx*4)
+            ax.set_title("dim = " + str(dim) + ", clf = " + classifier_names[clf_idx])
+            do_benchmark(ax, data_generator, classifier, query_strategy, basic_train, nb_queries, size_train, size_val)
+    plt.tight_layout()
+    plt.show()
+
 dim_values = [20,50,100,200]
 classifier_values = [LogisticRegression, GaussianNB, create_SVC]
 classifier_names = ["LogisticRegression", "GaussianNB", "SVC"]
+query_strategy=uncertainty_sampling
+basic_train = 10
+nb_queries = 290
+size_train = 1000
+size_val = 1000
 
-fig = plt.figure()
-for (clf_idx, classifier) in enumerate(classifier_values):
-    for (dim_idx, dim) in enumerate(dim_values):
-        data_generator = create_two_gaussians(dim=dim, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
-        ax = fig.add_subplot(3,4,1+dim_idx+clf_idx*4)
-        ax.set_title("dim = " + str(dim) + ", clf = " + classifier_names[clf_idx])
-        do_benchmark(ax, data_generator, classifier, uncertainty_sampling, basic_train, nb_queries, size_train, size_val)
-
-plt.tight_layout()
-plt.show()
+compare_learning_curves(dim_values, classifier_values, classifier_names, query_strategy, basic_train, nb_queries, size_train, size_val)
