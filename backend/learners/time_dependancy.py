@@ -76,7 +76,7 @@ if __name__ == "__main__":
     std[0] = 0.2
 
     def f(X,t): 
-        return X[0]>0.5+0.3*np.sin(t)
+        return X[:,0]>0.5+0.3*np.sin(t)
 
     # Construct generator
 
