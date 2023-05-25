@@ -9,3 +9,5 @@ streamlit==1.22.0
 protobuf==3.20.*
 altair==4.1.0
 watchdog==2.1.6
+plotly==5.4.0
+bokeh==2.4.1

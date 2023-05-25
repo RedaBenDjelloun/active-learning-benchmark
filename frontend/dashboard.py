@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import plotly.express as px
+
 
 from modAL.models import ActiveLearner
 from modAL.uncertainty import uncertainty_sampling, margin_sampling, entropy_sampling
@@ -15,113 +17,170 @@ from sklearn.svm import SVC
 from generators.generator import GaussianGenerator, DataGenerators, not_convex
 from learners.comparator import create_two_gaussians, construct_learner, generate_dataset, compute_accuracies, plot_accuracies, do_benchmark, create_SVC
 
-data_generator_names = ['Two Gaussians', 'Not convex']
-
 st.sidebar.title('Active learning dashboard')
 
-# Slider for the dimension
-if 'dimension' not in st.session_state:
-    st.session_state.dimension = 100
-    
-st.session_state.dimension = st.sidebar.slider(
-    'Dimension',
-    0, 300, value=100, step=10
-)
-
-# Selectbox for the data generator
-if 'data_generator' not in st.session_state:
-    st.session_state.data_generator = create_two_gaussians(dim=st.session_state.dimension, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
-
-select_data_generator = st.sidebar.selectbox(
-    'Data generator',
-    data_generator_names
-)
-if select_data_generator == 'Two Gaussians':
-    st.session_state.data_generator = create_two_gaussians(dim=st.session_state.dimension, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
-elif select_data_generator == 'Not convex':
-    st.session_state.data_generator  = not_convex(dim=st.session_state.dimension)
-
-# Selectbox for the classifier
-if 'classifier' not in st.session_state:
-    st.session_state.classifier = LogisticRegression
-
+data_generator_names = ['Two Gaussians', 'Not convex']
 classifier_names = ['Logistic Regression', 'Naive Bayes', 'SVM']
-select_classifier = st.sidebar.selectbox(
-    'Classifier',
-    classifier_names
-)
-if select_classifier == 'Logistic Regression':
-    st.session_state.classifier = LogisticRegression
-elif select_classifier == 'Naive Bayes':
-    st.session_state.classifier = GaussianNB
-elif select_classifier == 'SVM':
-    st.session_state.classifier = create_SVC
-
-# Selectbox for the query strategy
-if 'query_strategy' not in st.session_state:
-    st.session_state.query_strategy = uncertainty_sampling
-
 query_strategy_names = ['Uncertainty sampling', 'Margin sampling', 'Entropy sampling']
-select_query_strategy = st.sidebar.selectbox(
-    'Query strategy',
-    query_strategy_names
-)
-if select_query_strategy == 'Uncertainty sampling':
-    st.session_state.query_strategy = uncertainty_sampling
-elif select_query_strategy == 'Margin sampling':
-    st.session_state.query_strategy = margin_sampling
-elif select_query_strategy == 'Entropy sampling':
-    st.session_state.query_strategy = entropy_sampling
 
-# Slider for the number of basic train with initial value 10
-if 'basic_train' not in st.session_state:
-    st.session_state.basic_train = 10
+# Functions to update session state
+def update_data_generator():
+    if st.session_state.data_generator_name == 'Two Gaussians':
+        st.session_state.data_generator = create_two_gaussians(dim=st.session_state.dimension, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
+    elif st.session_state.data_generator_name == 'Not convex':
+        st.session_state.data_generator  = not_convex(dim=st.session_state.dimension)
 
-st.session_state.basic_train = st.sidebar.slider(
-    'Number of basic train',
-    0, 100, value=10, step=1
-)
+def update_classifier():
+    if st.session_state.classifier_name == 'Logistic Regression':
+        st.session_state.classifier = LogisticRegression
+    elif st.session_state.classifier_name == 'Naive Bayes':
+        st.session_state.classifier = GaussianNB
+    elif st.session_state.classifier_name == 'SVM':
+        st.session_state.classifier = create_SVC
 
-# Slider for the number of queries with initial value 290
-if 'nb_queries' not in st.session_state:
-    st.session_state.nb_queries = 290
+def update_query_strategy():
+    if st.session_state.query_strategy_name == 'Uncertainty sampling':
+        st.session_state.query_strategy = uncertainty_sampling
+    elif st.session_state.query_strategy_name == 'Margin sampling':
+        st.session_state.query_strategy = margin_sampling
+    elif st.session_state.query_strategy_name == 'Entropy sampling':
+        st.session_state.query_strategy = entropy_sampling
 
-st.session_state.nb_queries = st.sidebar.slider(
-    'Number of queries',
-    0, 1000, value=290, step=10
-)
+# Add tabs in sidebar
+tabs = ['Dataset', 'Classifier', 'Learner']
+sbtab1, sbtab2, sbtab3 = st.sidebar.tabs(tabs)
 
-# Slider for the size of the training set with initial value 1000
-if 'size_train' not in st.session_state:
-    st.session_state.size_train = 1000
 
-st.session_state.size_train = st.sidebar.slider(
-    'Size of the training set',
-    0, 10000, value=1000, step=100
-)
+with sbtab1:
+    # Slider for the dimension
+    if 'dimension' not in st.session_state:
+        st.session_state.dimension = 100
 
-# Slider for the size of the validation set with initial value 1000
-if 'size_val' not in st.session_state:
-    st.session_state.size_val = 1000
+    dimension = st.slider(
+        'Dimension',
+        0, 300, step=10, 
+        key='dimension',
+        on_change=update_data_generator
+    )
 
-st.session_state.size_val = st.sidebar.slider(
-    'Size of the validation set',
-    0, 10000, value=1000, step=100
-)
+    # Selectbox for the data generator
+    if 'data_generator_name' not in st.session_state:
+        st.session_state.data_generator_name = 'Two Gaussians'
+    if 'data_generator' not in st.session_state:
+        st.session_state.data_generator = create_two_gaussians(dim=st.session_state.dimension, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
 
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1)
-do_benchmark(ax, st.session_state.data_generator, st.session_state.classifier, st.session_state.query_strategy, st.session_state.basic_train, st.session_state.nb_queries, st.session_state.size_train, st.session_state.size_val)
-st.pyplot(fig)
+    select_data_generator = st.selectbox(
+        'Data generator',
+        data_generator_names,
+        key='data_generator_name',
+        on_change=update_data_generator
+    )
 
-# left_column, right_column = st.columns(2)
-# # You can use a column just like st.sidebar:
-# left_column.button('Press me!')
+    # Slider for the size of the training set with initial value 1000
+    if 'size_train' not in st.session_state:
+        st.session_state.size_train = 1000
 
-# # Or even better, call Streamlit functions inside a "with" block:
-# with right_column:
-#     chosen = st.radio(
-#         'Sorting hat',
-#         ("Gryffindor", "Ravenclaw", "Hufflepuff", "Slytherin"))
-#     st.write(f"You are in {chosen} house!")
+    size_train = st.slider(
+        'Size of the training set',
+        0, 3000, step=100, key='size_train'
+    )
 
+    # Slider for the size of the validation set with initial value 1000
+    if 'size_val' not in st.session_state:
+        st.session_state.size_val = 1000
+
+    size_val = st.slider(
+        'Size of the validation set',
+        0, 3000, step=100, key='size_val'
+    )
+
+
+with sbtab2:
+    # Selectbox for the classifier
+    if 'classifier_name' not in st.session_state:
+        st.session_state.classifier_name = 'Logistic Regression'
+    if 'classifier' not in st.session_state:
+        st.session_state.classifier = LogisticRegression
+
+    select_classifier = st.selectbox(
+        'Classifier',
+        classifier_names,
+        key='classifier_name',
+        on_change=update_classifier
+    )
+
+with sbtab3:
+    # Selectbox for the query strategy
+    if 'query_strategy_name' not in st.session_state:
+        st.session_state.query_strategy_name = 'Uncertainty sampling'
+    if 'query_strategy' not in st.session_state:
+        st.session_state.query_strategy = uncertainty_sampling
+
+    select_query_strategy = st.selectbox(
+        'Query strategy',
+        query_strategy_names,
+        key='query_strategy_name',
+        on_change=update_query_strategy
+    )
+
+    # Slider for the number of basic train with initial value 10
+    if 'basic_train' not in st.session_state:
+        st.session_state.basic_train = 10
+
+    basic_train = st.slider(
+        'Number of basic train',
+        0, 100, step=1, key='basic_train'
+    )
+
+    # Slider for the number of queries with initial value 290
+    if 'nb_queries' not in st.session_state:
+        st.session_state.nb_queries = 290
+
+    nb_queries = st.slider(
+        'Number of queries',
+        0, 1000, step=10, key='nb_queries'
+    )
+
+# Add a tab for data distribution and another for the benchmark
+tab1, tab2 = st.tabs(['Data distribution', 'Learning curves'])
+
+
+
+X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
+learner = construct_learner(st.session_state.classifier, st.session_state.query_strategy)
+
+# Add a plot for the data distribution with plotly
+with tab1:
+    fig = px.scatter(
+        x=X_train[:, 0], 
+        y=X_train[:, 1],
+        color= y_train,
+        title='First and second dimensions of data distribution')
+    fig.update_yaxes(
+        scaleanchor="x",
+        scaleratio=1,
+    )
+    st.plotly_chart(fig)
+
+# Add a plot for the benchmark with plotly
+with tab2:
+    x = [i for i in range(st.session_state.basic_train,
+                          st.session_state.basic_train+st.session_state.nb_queries+1)]
+    accuracies_basic, accuracies_learner = compute_accuracies(X_train,
+                                                              y_train, 
+                                                              X_val, 
+                                                              y_val, 
+                                                              st.session_state.basic_train, 
+                                                              st.session_state.nb_queries, 
+                                                              learner, 
+                                                              st.session_state.classifier)
+    df = pd.DataFrame(dict(
+        queries=x,
+        basic=accuracies_basic,
+        learner=accuracies_learner
+    ))
+    fig = px.line(df, 
+                  x="queries", 
+                  y=["basic","learner"],
+                  title='Accuracy of the classifier with basic training and active learning')
+    st.plotly_chart(fig)
