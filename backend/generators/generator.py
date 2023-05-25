@@ -61,7 +61,7 @@ class UniformGenerator(Generator):
 
     def update(self,t):
         if self.updator is not None:
-            a, b = updator(t)
+            a, b = self.updator(t)
 
 class CustomGenerator(Generator):
     def __init__(self, f, time_dependant=False):
@@ -196,6 +196,7 @@ def separation_on_uniform(dim=2):
     return DataGeneratorsWithHiddenFunction(generator,f)
 
 def two_gaussians(dim,std):
+    target = np.zeros(dim)
     target[0] = 1
     lst_gen = []
     lst_gen.append(GaussianGenerator(target,std))

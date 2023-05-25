@@ -6,7 +6,7 @@ from sklearn.svm import SVC
 from generators.generator import GaussianGenerator, DataGenerators, DataGeneratorsWithHiddenFunction, UniformGenerator
 from matplotlib import pyplot as plt
 import numpy as np
-from comparator import generate_dataset, plot_accuracies, construct_learner, create_two_gaussians
+from learners.comparator import generate_dataset, plot_accuracies, construct_learner, create_two_gaussians
 
 def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_queries_by_step, nb_steps, learner, classifier, dt, gamma=1):
     t=0
