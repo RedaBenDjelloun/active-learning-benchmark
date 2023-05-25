@@ -94,6 +94,16 @@ with sbtab1:
         0, 3000, step=100, key='size_val'
     )
 
+    if 'nb_replications_max' not in st.session_state:
+        st.session_state.nb_replications_max = 5
+
+    nb_replications_max = st.slider(
+        'Number of replications',
+        1, 20, step=1, 
+        key='nb_replications_max',
+        on_change=update_data_generator
+    )
+
 
 with sbtab2:
     # Selectbox for the classifier
@@ -164,23 +174,34 @@ with tab1:
 
 # Add a plot for the benchmark with plotly
 with tab2:
-    x = [i for i in range(st.session_state.basic_train,
-                          st.session_state.basic_train+st.session_state.nb_queries+1)]
-    accuracies_basic, accuracies_learner = compute_accuracies(X_train,
-                                                              y_train, 
-                                                              X_val, 
-                                                              y_val, 
-                                                              st.session_state.basic_train, 
-                                                              st.session_state.nb_queries, 
-                                                              learner, 
-                                                              st.session_state.classifier)
-    df = pd.DataFrame(dict(
-        queries=x,
-        basic=accuracies_basic,
-        learner=accuracies_learner
-    ))
-    fig = px.line(df, 
-                  x="queries", 
-                  y=["basic","learner"],
-                  title='Accuracy of the classifier with basic training and active learning')
-    st.plotly_chart(fig)
+    total_accuracies_learner = np.zeros(st.session_state.nb_queries+1)
+    total_accuracies_basic = np.zeros(st.session_state.nb_queries+1)
+    for n in range(1,st.session_state.nb_replications_max+1):
+        learner = construct_learner(st.session_state.classifier, st.session_state.query_strategy)
+        X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
+        x = [i for i in range(st.session_state.basic_train,
+                            st.session_state.basic_train+st.session_state.nb_queries+1)]
+        accuracies_basic, accuracies_learner = compute_accuracies(X_train,
+                                                                y_train, 
+                                                                X_val, 
+                                                                y_val, 
+                                                                st.session_state.basic_train, 
+                                                                st.session_state.nb_queries, 
+                                                                learner, 
+                                                                st.session_state.classifier)
+        accuracies_basic = np.array(accuracies_basic)
+        accuracies_learner = np.array(accuracies_learner)
+        total_accuracies_learner = (n-1)/n*total_accuracies_learner + accuracies_learner/n
+        total_accuracies_basic = (n-1)/n*total_accuracies_basic + accuracies_basic/n
+        df = pd.DataFrame(dict(
+            queries=x,
+            basic=total_accuracies_basic,
+            learner=total_accuracies_learner
+        ))
+        fig = px.line(df, 
+                    x="queries", 
+                    y=["basic","learner"],
+                    title=f'Accuracy of the classifier with basic training and active learning on {n} replications')
+        if n>1:
+            element.empty()
+        element  = st.plotly_chart(fig)
