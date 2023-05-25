@@ -33,10 +33,11 @@ def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_quer
             X_train_learner =  np.concatenate((X_train_learner,X_train[query_idx]))
             y_train_learner =  np.concatenate((y_train_learner,y_train[query_idx]))
             # Perform a step of active learning
-            learner.fit(X_train_learner,y_train_learner,sample_weight=weights)
+            #learner.fit(X_train_learner,y_train_learner,sample_weight=weights)
             # Update remaining data
             X_train = np.delete(X_train, query_idx, 0)
             y_train = np.delete(y_train, query_idx, 0)
+        learner.fit(X_train_learner,y_train_learner,sample_weight=weights)
         # Recreate classifier
         clf = classifier()
         clf.fit(X_train_basic,y_train_basic,sample_weight=weights)
@@ -54,7 +55,7 @@ def plot_time_accuracies(ax,accuracies_basic, accuracies_learner, dt, nb_steps):
 
 
 if __name__ == "__main__":
-    dim = 20
+    dim = 50
     classifier = LogisticRegression
     query_strategy = uncertainty_sampling
     learner = construct_learner(classifier, query_strategy)
@@ -68,12 +69,9 @@ if __name__ == "__main__":
     size_train = 500
     size_val = 500
     dt = 0.1
-    nb_queries_by_step = 2
-    nb_steps = 100
-    gamma = 1
-
-    std = np.ones(dim)
-    std[0] = 0.2
+    nb_queries_by_step = 5
+    nb_steps = 200
+    gamma = 0.8
 
     def f(X,t): 
         return X[:,0]>0.5+0.3*np.sin(t)
