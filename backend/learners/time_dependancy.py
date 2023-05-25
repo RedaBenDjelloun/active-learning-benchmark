@@ -8,6 +8,14 @@ from matplotlib import pyplot as plt
 import numpy as np
 from learners.comparator import generate_dataset, plot_accuracies, construct_learner, create_two_gaussians
 
+def construct_water_level_data_generator(dim, amplitude = 0.3, frequency = 0.25, threshold = 0.5):
+    def f(X,t): 
+        return X[:,0]>threshold+amplitude*np.sin(2*np.pi*frequency*t)
+    
+    gen = UniformGenerator(np.zeros(dim),np.ones(dim))
+    data_gen = DataGeneratorsWithHiddenFunction(gen,f)
+    return data_gen
+
 def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_queries_by_step, nb_steps, learner, classifier, dt, gamma=1):
     t=0
     X_train_basic, y_train_basic, X_val, y_val = generate_dataset(data_gen,basic_train,size_val,t)
@@ -47,6 +55,7 @@ def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_quer
         weights *= np.exp(-gamma*dt)
     return accuracies_basic, accuracies_learner
 
+
 def plot_time_accuracies(ax,accuracies_basic, accuracies_learner, dt, nb_steps):
     x = [i*dt for i in range(nb_steps+1)]
     ax.plot(x,accuracies_basic)
@@ -73,15 +82,13 @@ if __name__ == "__main__":
     nb_steps = 200
     gamma = 0.8
 
-    def f(X,t): 
-        return X[:,0]>0.5+0.3*np.sin(t)
+
 
     # Construct generator
+    
+    data_gen = construct_water_level_data_generator(dim)
 
-    gen = UniformGenerator(np.zeros(dim),np.ones(dim))
-    data_gen = DataGeneratorsWithHiddenFunction(gen,f)
     #data_gen = create_two_gaussians(dim=dim, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
-
 
     accuracies_basic, accuracies_learner = compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_queries_by_step, nb_steps, learner, classifier, dt, gamma)
 

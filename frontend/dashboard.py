@@ -16,6 +16,7 @@ from sklearn.svm import SVC
 
 from generators.generator import GaussianGenerator, DataGenerators, not_convex
 from learners.comparator import create_two_gaussians, construct_learner, generate_dataset, compute_accuracies, plot_accuracies, do_benchmark, create_SVC
+from learners.time_dependancy import construct_water_level_data_generator, compute_time_accuracies
 
 st.sidebar.title('Active learning dashboard')
 
@@ -47,8 +48,8 @@ def update_query_strategy():
         st.session_state.query_strategy = entropy_sampling
 
 # Add tabs in sidebar
-tabs = ['Dataset', 'Classifier', 'Learner']
-sbtab1, sbtab2, sbtab3 = st.sidebar.tabs(tabs)
+tabs = ['Dataset', 'Classifier', 'Learner', 'Evolution']
+sbtab1, sbtab2, sbtab3, sbtab4 = st.sidebar.tabs(tabs)
 
 
 with sbtab1:
@@ -141,16 +142,60 @@ with sbtab3:
         0, 1000, step=10, key='nb_queries'
     )
 
+with sbtab4:
+    # Radio button to indicate if dataset is static or dynamic
+    if 'is_static' not in st.session_state:
+        st.session_state.is_static = True
+    
+    is_static = st.radio(
+        'Dataset i static',
+        (True, False),
+        key='is_static'
+    )
+
+
+    # Slider for the number of steps
+    if 'nb_steps' not in st.session_state:
+        st.session_state.nb_steps = 200
+    
+    nb_steps = st.slider(
+        'Number of steps',
+        0, 1000, step=10, key='nb_steps'
+    )
+
+    # Slider for the number of queries per step
+    if 'nb_queries_per_step' not in st.session_state:
+        st.session_state.nb_queries_per_step = 5
+    
+    nb_queries_per_step = st.slider(
+        'Number of queries per step',
+        0, 100, step=1, key='nb_queries_per_step'
+    )
+
+    # Slider for dt
+    if 'dt' not in st.session_state:
+        st.session_state.dt = 0.1
+    
+    dt = st.slider(
+        'dt',
+        0.0, 1.0, step=0.1, key='dt'
+    )
+
+    # Slider for number of points displayed
+    if 'nb_points_displayed' not in st.session_state:
+        st.session_state.nb_points_displayed = 1000
+    
+    nb_points_displayed = st.slider(
+        'Number of points displayed',
+        0, 1000, step=10, key='nb_points_displayed'
+    )
+    
+
 # Add a tab for data distribution and another for the benchmark
 tab1, tab2 = st.tabs(['Data distribution', 'Learning curves'])
 
-
-
-X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
-learner = construct_learner(st.session_state.classifier, st.session_state.query_strategy)
-
-# Add a plot for the data distribution with plotly
-with tab1:
+def plot_static_distributions():
+    X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
     fig = px.scatter(
         x=X_train[:, 0], 
         y=X_train[:, 1],
@@ -160,10 +205,49 @@ with tab1:
         scaleanchor="x",
         scaleratio=1,
     )
+    return fig
+
+def plot_dynamic_distributions():
+    data_gen = construct_water_level_data_generator(st.session_state.dimension)
+
+    data = []
+    t = 0
+    for i in range(st.session_state.nb_steps+1):
+        X_train, y_train, X_val, y_val = generate_dataset(data_gen, st.session_state.size_train, st.session_state.size_val,t)
+        df_data = pd.DataFrame(dict(
+            t=round(t,2),
+            x=X_train[:st.session_state.nb_points_displayed, 0],
+            y=X_train[:st.session_state.nb_points_displayed, 1],
+            label=y_train[:st.session_state.nb_points_displayed]
+        ))
+        data.append(df_data)
+        t += st.session_state.dt
+
+    df_distributions = pd.concat(data, axis=0)
+
+    fig = px.scatter(
+        df_distributions,
+        x="x",
+        y="y",
+        color="label",
+        animation_frame="t",
+    )
+    fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 0
+    return fig
+
+
+# Add a plot for the data distribution with plotly
+with tab1:
+    if st.session_state.is_static:
+        fig = plot_static_distributions()
+    else:
+        fig = plot_dynamic_distributions()
     st.plotly_chart(fig)
 
 # Add a plot for the benchmark with plotly
 with tab2:
+    X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
+    learner = construct_learner(st.session_state.classifier, st.session_state.query_strategy)
     x = [i for i in range(st.session_state.basic_train,
                           st.session_state.basic_train+st.session_state.nb_queries+1)]
     accuracies_basic, accuracies_learner = compute_accuracies(X_train,
