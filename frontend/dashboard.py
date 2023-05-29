@@ -25,13 +25,19 @@ classifier_names = ['Logistic Regression', 'Naive Bayes', 'SVM']
 query_strategy_names = ['Uncertainty sampling', 'Margin sampling', 'Entropy sampling']
 
 # Functions to update session state
+def reinit_curve_data():
+    st.session_state.all_accuracies_learner = np.array([])
+    st.session_state.all_accuracies_basic = np.array([])
+
 def update_data_generator():
+    reinit_curve_data()
     if st.session_state.data_generator_name == 'Two Gaussians':
         st.session_state.data_generator = create_two_gaussians(dim=st.session_state.dimension, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
     elif st.session_state.data_generator_name == 'Not convex':
         st.session_state.data_generator  = not_convex(dim=st.session_state.dimension)
 
 def update_classifier():
+    reinit_curve_data()
     if st.session_state.classifier_name == 'Logistic Regression':
         st.session_state.classifier = LogisticRegression
     elif st.session_state.classifier_name == 'Naive Bayes':
@@ -40,6 +46,7 @@ def update_classifier():
         st.session_state.classifier = create_SVC
 
 def update_query_strategy():
+    reinit_curve_data()
     if st.session_state.query_strategy_name == 'Uncertainty sampling':
         st.session_state.query_strategy = uncertainty_sampling
     elif st.session_state.query_strategy_name == 'Margin sampling':
@@ -59,7 +66,7 @@ with sbtab1:
 
     dimension = st.slider(
         'Dimension',
-        0, 300, step=10, 
+        10, 300, step=10, 
         key='dimension',
         on_change=update_data_generator
     )
@@ -102,7 +109,6 @@ with sbtab1:
         'Number of replications',
         1, 20, step=1, 
         key='nb_replications_max',
-        on_change=update_data_generator
     )
 
 
@@ -256,9 +262,11 @@ with tab1:
 
 # Add a plot for the benchmark with plotly
 with tab2:
-    total_accuracies_learner = np.zeros(st.session_state.nb_queries+1)
-    total_accuracies_basic = np.zeros(st.session_state.nb_queries+1)
-    for n in range(1,st.session_state.nb_replications_max+1):
+    if "all_accuracies_learner" not in st.session_state:
+        reinit_curve_data()
+    while_loop_entered = False
+    while(len(st.session_state.all_accuracies_learner)<st.session_state.nb_replications_max):
+        while_loop_entered = True
         learner = construct_learner(st.session_state.classifier, st.session_state.query_strategy)
         X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
         x = [i for i in range(st.session_state.basic_train,
@@ -271,19 +279,36 @@ with tab2:
                                                                 st.session_state.nb_queries, 
                                                                 learner, 
                                                                 st.session_state.classifier)
-        accuracies_basic = np.array(accuracies_basic)
-        accuracies_learner = np.array(accuracies_learner)
-        total_accuracies_learner = (n-1)/n*total_accuracies_learner + accuracies_learner/n
-        total_accuracies_basic = (n-1)/n*total_accuracies_basic + accuracies_basic/n
+        if len(st.session_state.all_accuracies_learner)==0:
+            st.session_state.all_accuracies_learner = np.array([accuracies_learner])
+            st.session_state.all_accuracies_basic = np.array([accuracies_basic])
+        else:
+            st.session_state.all_accuracies_learner = np.concatenate((st.session_state.all_accuracies_learner, np.array([accuracies_learner])),axis=0)
+            st.session_state.all_accuracies_basic = np.concatenate((st.session_state.all_accuracies_basic, np.array([accuracies_basic])),axis=0)
         df = pd.DataFrame(dict(
             queries=x,
-            basic=total_accuracies_basic,
-            learner=total_accuracies_learner
+            basic=np.mean(st.session_state.all_accuracies_basic,axis=0),
+            learner=np.mean(st.session_state.all_accuracies_learner,axis=0)
         ))
         fig = px.line(df, 
                     x="queries", 
                     y=["basic","learner"],
-                    title=f'Accuracy of the classifier with basic training and active learning on {n} replications')
-        if n>1:
-            element.empty()
-        element  = st.plotly_chart(fig)
+                    title=f'Accuracy of the classifier with basic training and active learning on {len(st.session_state.all_accuracies_learner)} replications')
+        if "plot_accuracies" in st.session_state:
+            st.session_state.plot_accuracies.empty()
+        st.session_state.plot_accuracies = st.plotly_chart(fig)
+
+    # if we do not enter the while loop we need to plot the graph !
+    if(not while_loop_entered):
+        x = [i for i in range(st.session_state.basic_train,
+            st.session_state.basic_train+st.session_state.nb_queries+1)]
+        df = pd.DataFrame(dict(
+            queries=x,
+            basic=np.mean(st.session_state.all_accuracies_basic[:st.session_state.nb_replications_max,:],axis=0),
+            learner=np.mean(st.session_state.all_accuracies_learner[:st.session_state.nb_replications_max,:],axis=0)
+        ))
+        fig = px.line(df, 
+                    x="queries", 
+                    y=["basic","learner"],
+                    title=f'Accuracy of the classifier with basic training and active learning on {nb_replications_max} replications')
+        st.session_state.plot_accuracies = st.plotly_chart(fig)
