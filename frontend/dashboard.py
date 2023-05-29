@@ -248,7 +248,7 @@ def plot_dynamic_distributions():
         scaleanchor="x",
         scaleratio=1,
     )
-    fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 0
+    fig.layout.updatemenus[0].buttons[0].args[1]["transition"]["duration"] = 0
     fig.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = int(1000*st.session_state.dt)
     return fig
 
@@ -325,4 +325,6 @@ with tab2:
                     x="queries", 
                     y=["basic","learner"],
                     title=f'Accuracy of the classifier with basic training and active learning on {nb_replications_max} replications')
+        if "plot_accuracies" in st.session_state:
+            st.session_state.plot_accuracies.empty()
         st.session_state.plot_accuracies = st.plotly_chart(fig)
