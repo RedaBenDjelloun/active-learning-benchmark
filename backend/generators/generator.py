@@ -213,9 +213,9 @@ def gauss_generator(dimension=2,nb_class=2,std=1):
     class_generator = Discrete1DUniformGenerator(nb_class)
     return DataGenerators(generators,class_generator)
 
-def unit_sphere_test(dimension,quantity):
+def unit_sphere_test(dimension,quantity,noise=0.1):
     x = np.random.normal(0,1,(quantity,dimension))
-    x = x/np.linalg.norm(x,axis=1)[:,None]
+    x = np.random.normal(1,noise,quantity)[:,None]*x/(np.linalg.norm(x,axis=1)+1e-6)[:,None]
     return x
 
 
@@ -249,10 +249,10 @@ def two_gaussians(dim,std):
 
 def not_convex(dim=2,noise=0.1):
     generators = []
-    center_std = 0.5
+    center_std = 0.7/np.sqrt(dim)
     generators.append(GaussianGenerator(np.zeros(dim),center_std))
-    f = lambda quantity:unit_sphere_test(dim,quantity)
-    generators.append(SumGenerator([CustomGenerator(f),GaussianGenerator(np.zeros(dim),noise)]))
+    f = lambda quantity:unit_sphere_test(dim,quantity,noise)
+    generators.append(CustomGenerator(f))
     return DataGenerators(generators)
 
 def display_classes(X,y):
@@ -266,7 +266,7 @@ def display_classes(X,y):
 
 if __name__ == "__main__":
 
-    data_generator = test2()
+    data_generator = test()
 
     X,y = data_generator.generate_data(1000)
 
