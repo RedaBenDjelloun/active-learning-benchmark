@@ -33,10 +33,13 @@ def update_data_generator():
     reinit_curve_data()
     if st.session_state.data_generator_name == 'Two Gaussians':
         st.session_state.data_generator = create_two_gaussians(dim=st.session_state.dimension, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
+        st.session_state.data_generator2D = create_two_gaussians(dim=2, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
     elif st.session_state.data_generator_name == 'Not convex':
         st.session_state.data_generator = not_convex(dim=st.session_state.dimension)
+        st.session_state.data_generator2D = not_convex(dim=2)
     elif st.session_state.data_generator_name == 'Water level':
         st.session_state.data_generator =  construct_water_level_data_generator(dim=st.session_state.dimension)
+        st.session_state.data_generator2D = construct_water_level_data_generator(dim=2)
 
 def update_classifier():
     reinit_curve_data()
@@ -78,6 +81,8 @@ with sbtab1:
         st.session_state.data_generator_name = 'Two Gaussians'
     if 'data_generator' not in st.session_state:
         st.session_state.data_generator = create_two_gaussians(dim=st.session_state.dimension, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
+    if 'data_generator2D' not in st.session_state:
+        st.session_state.data_generator2D = create_two_gaussians(dim=2, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
 
     select_data_generator = st.selectbox(
         'Data generator',
@@ -112,6 +117,7 @@ with sbtab1:
         1, 20, step=1, 
         key='nb_replications_max',
     )
+    
 
 
 with sbtab2:
@@ -197,18 +203,18 @@ with sbtab4:
         'Number of points displayed',
         0, 1000, step=10, key='nb_points_displayed'
     )
-    
+
 
 # Add a tab for data distribution and another for the benchmark
 tab1, tab2 = st.tabs(['Data distribution', 'Learning curves'])
 
 def plot_static_distributions():
-    X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
+    X_train, y_train, _, _ = generate_dataset(st.session_state.data_generator2D, st.session_state.size_train, 0)
     fig = px.scatter(
         x=X_train[:, 0], 
         y=X_train[:, 1],
         color= y_train,
-        title='First and second dimensions of data distribution')
+        title='2D equivalent of the data distribution')
     fig.update_yaxes(
         scaleanchor="x",
         scaleratio=1,
@@ -219,7 +225,7 @@ def plot_dynamic_distributions():
     data = []
     t = 0
     for i in range(st.session_state.nb_steps+1):
-        X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val,t)
+        X_train, y_train, _, _ = generate_dataset(st.session_state.data_generator2D, st.session_state.size_train, 0,t)
         df_data = pd.DataFrame(dict(
             t=round(t,2),
             x=X_train[:st.session_state.nb_points_displayed, 0],
@@ -238,7 +244,12 @@ def plot_dynamic_distributions():
         color="label",
         animation_frame="t",
     )
+    fig.update_yaxes(
+        scaleanchor="x",
+        scaleratio=1,
+    )
     fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 0
+    fig.layout.updatemenus[0].buttons[0].args[1]['frame']['duration'] = int(1000*st.session_state.dt)
     return fig
 
 
@@ -253,7 +264,8 @@ with tab1:
 # Add a plot for the benchmark with plotly
 with tab2:
     if "all_accuracies_learner" not in st.session_state:
-        reinit_curve_data()
+        st.session_state.all_accuracies_learner = np.array([])
+        st.session_state.all_accuracies_basic = np.array([])
     while_loop_entered = False
     while(len(st.session_state.all_accuracies_learner)<st.session_state.nb_replications_max):
         while_loop_entered = True
