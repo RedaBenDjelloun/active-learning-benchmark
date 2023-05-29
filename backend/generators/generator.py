@@ -34,6 +34,10 @@ class GaussianGenerator(Generator):
         if self.updator is not None:
             self.mean, self.std = self.updator(t)
 
+    @property
+    def time_dependant(self):
+        return self.updator is not None
+
 class Discrete1DUniformGenerator(Generator):
     def __init__(self,n):
         super().__init__()
@@ -44,6 +48,10 @@ class Discrete1DUniformGenerator(Generator):
 
     def update(self,t):
         pass
+
+    @property
+    def time_dependant(self):
+        return False
     
 class UniformGenerator(Generator):
     def __init__(self,a,b,updator=None,t=0):
@@ -62,6 +70,10 @@ class UniformGenerator(Generator):
     def update(self,t):
         if self.updator is not None:
             a, b = self.updator(t)
+
+    @property
+    def time_dependant(self):
+        return self.updator is not None
 
 class CustomGenerator(Generator):
     def __init__(self, f, time_dependant=False):
@@ -89,6 +101,14 @@ class SumGenerator(Generator):
     def update(self,t):
         for generator in self.generators:
             generator.update(t)
+    
+    @property
+    def time_dependant(self):
+        result=False
+        for gen in self.generators:
+            result = result or gen.time_dependant
+        return result
+
 
 class UnionGenerator(Generator):
     def __init__(self,generators,probas=None):
@@ -111,6 +131,14 @@ class UnionGenerator(Generator):
     def update(self,t):
         for generator in self.generators:
             generator.update(t)
+    
+    @property
+    def time_dependant(self):
+        result=False
+        for gen in self.generators:
+            result = result or gen.time_dependant
+        return result
+
 
 
 class DataGenerators:
@@ -140,10 +168,19 @@ class DataGenerators:
         for generator in self.generators:
             generator.update(t)
 
+    @property
+    def time_dependant(self):
+        result=False
+        for gen in self.generators:
+            result = result or gen.time_dependant
+        return result
+
+
 class DataGeneratorsWithHiddenFunction:
-    def __init__(self,generator,hidden_f,nb_class=2):
+    def __init__(self,generator,hidden_f,time_dependant_function=False,nb_class=2):
         self.generator = generator
         self.hidden_f = hidden_f
+        self.time_dependant_function = time_dependant_function
         self.nb_class = nb_class
         self.dimension = len(self.generator())
 
@@ -151,8 +188,15 @@ class DataGeneratorsWithHiddenFunction:
         if t is not None:
             self.generator.update(t)
         X = self.generator(quantity=quantity)
-        y = self.hidden_f(X,t)
+        if self.time_dependant_function:
+            y = self.hidden_f(X,t)
+        else:
+            y = self.hidden_f(X)
         return X, y
+    
+    @property
+    def time_dependant(self):
+        return self.time_dependant_function or self.generator.time_dependant
     
 
 def gauss_generator(dimension=2,nb_class=2,std=1):
@@ -187,12 +231,12 @@ def test():
 
 def test2():
     generator = UniformGenerator(np.zeros(2),np.ones(2))
-    f = lambda X,t: X[:,0]+X[:,1]>1
+    f = lambda X: X[:,0]+X[:,1]>1
     return DataGeneratorsWithHiddenFunction(generator,f)
 
 def separation_on_uniform(dim=2):
     generator = UniformGenerator(np.zeros(dim),np.ones(dim))
-    f = lambda X,t: np.sum(X,axis=-1)>X.shape[-1]/2
+    f = lambda X: np.sum(X,axis=-1)>X.shape[-1]/2
     return DataGeneratorsWithHiddenFunction(generator,f)
 
 def two_gaussians(dim,std):
@@ -222,7 +266,7 @@ def display_classes(X,y):
 
 if __name__ == "__main__":
 
-    data_generator = not_convex(2)
+    data_generator = test2()
 
     X,y = data_generator.generate_data(1000)
 

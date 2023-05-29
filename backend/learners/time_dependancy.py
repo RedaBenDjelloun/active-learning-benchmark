@@ -13,7 +13,7 @@ def construct_water_level_data_generator(dim, amplitude = 0.3, frequency = 0.25,
         return X[:,0]>threshold+amplitude*np.sin(2*np.pi*frequency*t)
     
     gen = UniformGenerator(np.zeros(dim),np.ones(dim))
-    data_gen = DataGeneratorsWithHiddenFunction(gen,f)
+    data_gen = DataGeneratorsWithHiddenFunction(gen,f,time_dependant_function=True)
     return data_gen
 
 def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_queries_by_step, nb_steps, learner, classifier, dt, gamma=1):

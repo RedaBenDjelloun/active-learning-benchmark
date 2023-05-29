@@ -20,7 +20,7 @@ from learners.time_dependancy import construct_water_level_data_generator, compu
 
 st.sidebar.title('Active learning dashboard')
 
-data_generator_names = ['Two Gaussians', 'Not convex']
+data_generator_names = ['Two Gaussians', 'Not convex', 'Water level']
 classifier_names = ['Logistic Regression', 'Naive Bayes', 'SVM']
 query_strategy_names = ['Uncertainty sampling', 'Margin sampling', 'Entropy sampling']
 
@@ -34,7 +34,9 @@ def update_data_generator():
     if st.session_state.data_generator_name == 'Two Gaussians':
         st.session_state.data_generator = create_two_gaussians(dim=st.session_state.dimension, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
     elif st.session_state.data_generator_name == 'Not convex':
-        st.session_state.data_generator  = not_convex(dim=st.session_state.dimension)
+        st.session_state.data_generator = not_convex(dim=st.session_state.dimension)
+    elif st.session_state.data_generator_name == 'Water level':
+        st.session_state.data_generator =  construct_water_level_data_generator(dim=st.session_state.dimension)
 
 def update_classifier():
     reinit_curve_data()
@@ -90,7 +92,7 @@ with sbtab1:
 
     size_train = st.slider(
         'Size of the training set',
-        0, 3000, step=100, key='size_train'
+        0, 3000, step=100, key='size_train',on_change=reinit_curve_data
     )
 
     # Slider for the size of the validation set with initial value 1000
@@ -99,7 +101,7 @@ with sbtab1:
 
     size_val = st.slider(
         'Size of the validation set',
-        0, 3000, step=100, key='size_val'
+        0, 3000, step=100, key='size_val',on_change=reinit_curve_data
     )
 
     if 'nb_replications_max' not in st.session_state:
@@ -146,7 +148,7 @@ with sbtab3:
 
     basic_train = st.slider(
         'Number of basic train',
-        0, 100, step=1, key='basic_train'
+        0, 100, step=1, key='basic_train',on_change=reinit_curve_data
     )
 
     # Slider for the number of queries with initial value 290
@@ -155,20 +157,10 @@ with sbtab3:
 
     nb_queries = st.slider(
         'Number of queries',
-        0, 1000, step=10, key='nb_queries'
+        0, 1000, step=10, key='nb_queries',on_change=reinit_curve_data
     )
 
 with sbtab4:
-    # Radio button to indicate if dataset is static or dynamic
-    if 'is_static' not in st.session_state:
-        st.session_state.is_static = True
-    
-    is_static = st.radio(
-        'Dataset i static',
-        (True, False),
-        key='is_static'
-    )
-
 
     # Slider for the number of steps
     if 'nb_steps' not in st.session_state:
@@ -176,7 +168,7 @@ with sbtab4:
     
     nb_steps = st.slider(
         'Number of steps',
-        0, 1000, step=10, key='nb_steps'
+        0, 1000, step=10, key='nb_steps',on_change=reinit_curve_data
     )
 
     # Slider for the number of queries per step
@@ -185,7 +177,7 @@ with sbtab4:
     
     nb_queries_per_step = st.slider(
         'Number of queries per step',
-        0, 100, step=1, key='nb_queries_per_step'
+        0, 100, step=1, key='nb_queries_per_step',on_change=reinit_curve_data
     )
 
     # Slider for dt
@@ -194,7 +186,7 @@ with sbtab4:
     
     dt = st.slider(
         'dt',
-        0.0, 1.0, step=0.1, key='dt'
+        0.0, 1.0, step=0.1, key='dt',on_change=reinit_curve_data
     )
 
     # Slider for number of points displayed
@@ -224,12 +216,10 @@ def plot_static_distributions():
     return fig
 
 def plot_dynamic_distributions():
-    data_gen = construct_water_level_data_generator(st.session_state.dimension)
-
     data = []
     t = 0
     for i in range(st.session_state.nb_steps+1):
-        X_train, y_train, X_val, y_val = generate_dataset(data_gen, st.session_state.size_train, st.session_state.size_val,t)
+        X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val,t)
         df_data = pd.DataFrame(dict(
             t=round(t,2),
             x=X_train[:st.session_state.nb_points_displayed, 0],
@@ -254,10 +244,10 @@ def plot_dynamic_distributions():
 
 # Add a plot for the data distribution with plotly
 with tab1:
-    if st.session_state.is_static:
-        fig = plot_static_distributions()
-    else:
+    if st.session_state.data_generator.time_dependant:
         fig = plot_dynamic_distributions()
+    else:
+        fig = plot_static_distributions()
     st.plotly_chart(fig)
 
 # Add a plot for the benchmark with plotly
@@ -268,17 +258,29 @@ with tab2:
     while(len(st.session_state.all_accuracies_learner)<st.session_state.nb_replications_max):
         while_loop_entered = True
         learner = construct_learner(st.session_state.classifier, st.session_state.query_strategy)
-        X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
-        x = [i for i in range(st.session_state.basic_train,
+        if st.session_state.data_generator.time_dependant:
+            x = [i*dt for i in range(st.session_state.nb_steps+1)]
+            accuracies_basic, accuracies_learner = compute_time_accuracies(st.session_state.data_generator, 
+                                                                           st.session_state.size_train, 
+                                                                           st.session_state.size_val, 
+                                                                           st.session_state.basic_train, 
+                                                                           st.session_state.nb_queries_per_step, 
+                                                                           st.session_state.nb_steps, 
+                                                                           learner, 
+                                                                           st.session_state.classifier, 
+                                                                           st.session_state.dt)
+        else:
+            X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
+            x = [i for i in range(st.session_state.basic_train,
                             st.session_state.basic_train+st.session_state.nb_queries+1)]
-        accuracies_basic, accuracies_learner = compute_accuracies(X_train,
-                                                                y_train, 
-                                                                X_val, 
-                                                                y_val, 
-                                                                st.session_state.basic_train, 
-                                                                st.session_state.nb_queries, 
-                                                                learner, 
-                                                                st.session_state.classifier)
+            accuracies_basic, accuracies_learner = compute_accuracies(X_train,
+                                                                    y_train, 
+                                                                    X_val, 
+                                                                    y_val, 
+                                                                    st.session_state.basic_train, 
+                                                                    st.session_state.nb_queries, 
+                                                                    learner, 
+                                                                    st.session_state.classifier)
         if len(st.session_state.all_accuracies_learner)==0:
             st.session_state.all_accuracies_learner = np.array([accuracies_learner])
             st.session_state.all_accuracies_basic = np.array([accuracies_basic])
