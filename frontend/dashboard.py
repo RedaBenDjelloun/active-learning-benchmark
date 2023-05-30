@@ -314,7 +314,10 @@ with tab2:
 
     # if we do not enter the while loop we need to plot the graph !
     if(not while_loop_entered):
-        x = [i for i in range(st.session_state.basic_train,
+        if st.session_state.data_generator.time_dependant:
+                    x = [i*dt for i in range(st.session_state.nb_steps+1)]
+        else:
+            x = [i for i in range(st.session_state.basic_train,
             st.session_state.basic_train+st.session_state.nb_queries+1)]
         df = pd.DataFrame(dict(
             queries=x,
