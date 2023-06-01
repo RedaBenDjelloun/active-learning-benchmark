@@ -16,6 +16,15 @@ def construct_water_level_data_generator(dim, amplitude = 0.3, frequency = 0.25,
     data_gen = DataGeneratorsWithHiddenFunction(gen,f,time_dependant_function=True)
     return data_gen
 
+def construct_shift_data_generator(dim,speed=1,t0=5, amplitude=0.3, threshold=0.5):
+    def f(X,t):
+        return X[:,0]>threshold+amplitude*np.tanh(speed*(t-t0))
+    
+    gen = UniformGenerator(np.zeros(dim),np.ones(dim))
+    data_gen = DataGeneratorsWithHiddenFunction(gen,f,time_dependant_function=True)
+    return data_gen
+
+
 def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_queries_by_step, nb_steps, learner, classifier, dt, gamma=0.2):
     t=0
     y_train_basic = np.array([])
