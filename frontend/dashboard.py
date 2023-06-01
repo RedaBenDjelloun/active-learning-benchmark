@@ -204,6 +204,15 @@ with sbtab4:
         0, 1000, step=10, key='nb_points_displayed'
     )
 
+    # Slider for gamma parameter
+    if 'gamma' not in st.session_state:
+        st.session_state.gamma = 1.0
+
+    gamma = st.slider(
+        'discount rate',
+        0.,2.,step=0.1, key = 'gamma', on_change = reinit_curve_data
+    )
+
 
 # Add a tab for data distribution and another for the benchmark
 tab1, tab2 = st.tabs(['Data distribution', 'Learning curves'])
@@ -280,7 +289,8 @@ with tab2:
                                                                            st.session_state.nb_steps, 
                                                                            learner, 
                                                                            st.session_state.classifier, 
-                                                                           st.session_state.dt)
+                                                                           st.session_state.dt,
+                                                                           st.session_state.gamma)
         else:
             X_train, y_train, X_val, y_val = generate_dataset(st.session_state.data_generator, st.session_state.size_train, st.session_state.size_val)
             x = [i for i in range(st.session_state.basic_train,
