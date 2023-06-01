@@ -154,7 +154,7 @@ with sbtab3:
 
     basic_train = st.slider(
         'Number of basic train',
-        0, 100, step=1, key='basic_train',on_change=reinit_curve_data
+        2, 100, step=1, key='basic_train',on_change=reinit_curve_data
     )
 
     # Slider for the number of queries with initial value 290

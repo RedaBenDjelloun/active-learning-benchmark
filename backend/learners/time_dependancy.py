@@ -18,7 +18,9 @@ def construct_water_level_data_generator(dim, amplitude = 0.3, frequency = 0.25,
 
 def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_queries_by_step, nb_steps, learner, classifier, dt, gamma=1):
     t=0
-    X_train_basic, y_train_basic, X_val, y_val = generate_dataset(data_gen,basic_train,size_val,t)
+    y_train_basic = np.array([])
+    while len(np.unique(y_train_basic))<=1:
+        X_train_basic, y_train_basic, X_val, y_val = generate_dataset(data_gen,basic_train,size_val,t)
     # Initial teaching
     learner.teach(X_train_basic,y_train_basic)
     # Initialization

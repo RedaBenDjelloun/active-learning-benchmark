@@ -37,6 +37,11 @@ def generate_dataset(data_generator, size_train, size_val, t=None):
 
 def compute_accuracies(X_train, y_train, X_val, y_val, basic_train, nb_queries, learner, classifier):
     # Initial teaching
+    while len(np.unique(y_train[:basic_train]))<=1:
+        n = np.random.randint(basic_train,len(X_train)-basic_train-1)
+        y_train[:basic_train], y_train[n:n+basic_train] = y_train[n:n+basic_train], y_train[:basic_train]
+        X_train[:basic_train,:], X_train[n:n+basic_train,:] = X_train[n:n+basic_train,:], X_train[:basic_train,:]
+
     learner.teach(X_train[:basic_train], y_train[:basic_train])
     X_left, y_left = X_train[basic_train:], y_train[basic_train:]
     # Initialization
