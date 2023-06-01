@@ -97,7 +97,7 @@ with sbtab1:
 
     size_train = st.slider(
         'Size of the training set',
-        0, 3000, step=100, key='size_train',on_change=reinit_curve_data
+        100, 3000, step=100, key='size_train',on_change=reinit_curve_data
     )
 
     # Slider for the size of the validation set with initial value 1000
@@ -106,7 +106,7 @@ with sbtab1:
 
     size_val = st.slider(
         'Size of the validation set',
-        0, 3000, step=100, key='size_val',on_change=reinit_curve_data
+        100, 3000, step=100, key='size_val',on_change=reinit_curve_data
     )
 
     if 'nb_replications_max' not in st.session_state:
@@ -163,7 +163,7 @@ with sbtab3:
 
     nb_queries = st.slider(
         'Number of queries',
-        0, 1000, step=10, key='nb_queries',on_change=reinit_curve_data
+        10, 1000, step=10, key='nb_queries',on_change=reinit_curve_data
     )
 
 with sbtab4:
@@ -174,7 +174,7 @@ with sbtab4:
     
     nb_steps = st.slider(
         'Number of steps',
-        0, 1000, step=10, key='nb_steps',on_change=reinit_curve_data
+        10, 1000, step=10, key='nb_steps',on_change=reinit_curve_data
     )
 
     # Slider for the number of queries per step
@@ -183,7 +183,7 @@ with sbtab4:
     
     nb_queries_per_step = st.slider(
         'Number of queries per step',
-        0, 100, step=1, key='nb_queries_per_step',on_change=reinit_curve_data
+        1, 100, step=1, key='nb_queries_per_step',on_change=reinit_curve_data
     )
 
     # Slider for dt
@@ -201,7 +201,7 @@ with sbtab4:
     
     nb_points_displayed = st.slider(
         'Number of points displayed',
-        0, 1000, step=10, key='nb_points_displayed'
+        10, 1000, step=10, key='nb_points_displayed'
     )
 
     # Slider for gamma parameter
@@ -210,7 +210,7 @@ with sbtab4:
 
     gamma = st.slider(
         'discount rate',
-        0.,2.,step=0.1, key = 'gamma', on_change = reinit_curve_data
+        0.,10.,step=0.1, key = 'gamma', on_change = reinit_curve_data
     )
 
 
