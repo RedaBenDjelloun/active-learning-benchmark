@@ -111,19 +111,23 @@ class SumGenerator(Generator):
 
 
 class UnionGenerator(Generator):
-    def __init__(self,generators,probas=None):
+    def __init__(self,generators,dim=None,probas=None):
         if probas is None:
             probas = np.ones(len(generators))/len(generators)
         assert abs(sum(probas)-1)<1e-3 #assert that the sum of probas is 1
         self.probas = probas
         self.generators = generators
+        if dim is not None:
+            self.dim = dim
+        else:
+            self.dim = len(self.generators[0]()[0])
 
     def __call__(self,t=None,quantity=1):
         u = np.random.random(quantity)
-        X = np.zeros((quantity,len(self.probas)),float)
+        X = np.zeros((quantity,self.dim),float)
         acc=0
         for idx,p in enumerate(self.probas):
-            indices = np.nonzero((acc<=u)*(u<acc+p))
+            indices = np.nonzero((acc<=u)*(u<acc+p+(idx==len(self.generators)-1)))
             X[indices,:] = self.generators[idx](quantity=len(indices[0]))
             acc+=p
         return X
@@ -239,6 +243,17 @@ def separation_on_uniform(dim=2):
     f = lambda X: np.sum(X,axis=-1)>X.shape[-1]/2
     return DataGeneratorsWithHiddenFunction(generator,f)
 
+def xor_gen(dim=2,std=0.5):
+    generators = []
+    mean = np.zeros(dim)
+    mean[0] = 1
+    mean[1] = 1
+    generators.append(UnionGenerator([GaussianGenerator(mean.copy(),std,dim),GaussianGenerator(-mean.copy(),std,dim)]))
+    mean[0] = -1
+    generators.append(UnionGenerator([GaussianGenerator(mean.copy(),std,dim),GaussianGenerator(-mean.copy(),std,dim)]))
+    return DataGenerators(generators)
+
+
 def two_gaussians(dim,std):
     target = np.zeros(dim)
     target[0] = 1
@@ -266,7 +281,7 @@ def display_classes(X,y):
 
 if __name__ == "__main__":
 
-    data_generator = test()
+    data_generator = xor_gen()
 
     X,y = data_generator.generate_data(1000)
 
