@@ -299,15 +299,27 @@ with tab2:
         else:
             st.session_state.all_accuracies_learner = np.concatenate((st.session_state.all_accuracies_learner, np.array([accuracies_learner])),axis=0)
             st.session_state.all_accuracies_basic = np.concatenate((st.session_state.all_accuracies_basic, np.array([accuracies_basic])),axis=0)
-        df = pd.DataFrame(dict(
-            queries=x,
-            basic=np.mean(st.session_state.all_accuracies_basic,axis=0),
-            learner=np.mean(st.session_state.all_accuracies_learner,axis=0)
-        ))
-        fig = px.line(df, 
-                    x="queries", 
-                    y=["basic","learner"],
-                    title=f'Accuracy of the classifier with basic training and active learning on {len(st.session_state.all_accuracies_learner)} replications')
+        if st.session_state.data_generator.time_dependant:
+            df = pd.DataFrame(dict(
+                time=x,
+                basic=np.mean(st.session_state.all_accuracies_basic,axis=0),
+                learner=np.mean(st.session_state.all_accuracies_learner,axis=0)
+            ))
+            fig = px.line(df, 
+                        x="time", 
+                        y=["basic","learner"],
+                        title=f'Accuracy of the classifier with basic training and active learning on {len(st.session_state.all_accuracies_learner)} replications')
+        
+        else:
+            df = pd.DataFrame(dict(
+                queries=x,
+                basic=np.mean(st.session_state.all_accuracies_basic,axis=0),
+                learner=np.mean(st.session_state.all_accuracies_learner,axis=0)
+            ))
+            fig = px.line(df, 
+                        x="queries", 
+                        y=["basic","learner"],
+                        title=f'Accuracy of the classifier with basic training and active learning on {len(st.session_state.all_accuracies_learner)} replications')
         if "plot_accuracies" in st.session_state:
             st.session_state.plot_accuracies.empty()
         st.session_state.plot_accuracies = st.plotly_chart(fig)
