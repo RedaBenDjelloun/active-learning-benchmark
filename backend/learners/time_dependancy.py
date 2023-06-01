@@ -16,7 +16,7 @@ def construct_water_level_data_generator(dim, amplitude = 0.3, frequency = 0.25,
     data_gen = DataGeneratorsWithHiddenFunction(gen,f,time_dependant_function=True)
     return data_gen
 
-def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_queries_by_step, nb_steps, learner, classifier, dt, gamma=1):
+def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_queries_by_step, nb_steps, learner, classifier, dt, gamma=0.2):
     t=0
     y_train_basic = np.array([])
     while len(np.unique(y_train_basic))<=1:
@@ -30,7 +30,7 @@ def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_quer
     y_train_learner = y_train_basic[:]
     accuracies_learner = [learner.score(X_val,y_val)]
     accuracies_basic = [clf.score(X_val,y_val)]
-    weights = np.exp(-gamma*dt)*np.ones(basic_train)
+    weights = gamma**dt*np.ones(basic_train)
     for i in range(nb_steps):
         t+=dt
         X_train, y_train, X_val, y_val = generate_dataset(data_gen,size_train,size_val,t)
@@ -54,7 +54,7 @@ def compute_time_accuracies(data_gen, size_train, size_val, basic_train, nb_quer
         # Add accuracies to array
         accuracies_learner.append(learner.score(X_val,y_val))
         accuracies_basic.append(clf.score(X_val,y_val))
-        weights *= np.exp(-gamma*dt)
+        weights *= gamma**dt
     return accuracies_basic, accuracies_learner
 
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     dt = 0.1
     nb_queries_by_step = 5
     nb_steps = 200
-    gamma = 0.8
+    gamma = 0.3
 
 
 

@@ -206,11 +206,11 @@ with sbtab4:
 
     # Slider for gamma parameter
     if 'gamma' not in st.session_state:
-        st.session_state.gamma = 1.0
+        st.session_state.gamma = 0.5
 
     gamma = st.slider(
-        'discount rate',
-        0.,10.,step=0.1, key = 'gamma', on_change = reinit_curve_data
+        'Discount factor',
+        0.,1.,step=0.05, key = 'gamma', on_change = reinit_curve_data
     )
 
 
