@@ -16,9 +16,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
-from generators.generator import GaussianGenerator, DataGenerators, not_convex, xor_gen
-from learners.comparator import create_two_gaussians, construct_learner, generate_dataset, compute_accuracies, plot_accuracies, do_benchmark, create_SVC
-from learners.time_dependancy import construct_water_level_data_generator, compute_time_accuracies, construct_shift_data_generator
+from backend.generators.generator import GaussianGenerator, DataGenerators, not_convex, xor_gen
+from backend.learners.comparator import create_two_gaussians, construct_learner, generate_dataset, compute_accuracies, plot_accuracies, do_benchmark, create_SVC
+from backend.learners.time_dependancy import construct_water_level_data_generator, compute_time_accuracies, construct_shift_data_generator
 
 st.sidebar.title('Active learning dashboard')
 
