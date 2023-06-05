@@ -3,7 +3,7 @@ scipy==1.10.1
 matplotlib==3.5.1
 tk==0.1.0
 scikit-learn==1.2.1
-modal==0.4.1
+modAL==0.4.1
 pandas==1.5.3
 streamlit==1.22.0
 protobuf==3.20.*

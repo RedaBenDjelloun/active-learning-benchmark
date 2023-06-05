@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 
 
-from modal.models import ActiveLearner
-from modal.uncertainty import uncertainty_sampling, margin_sampling, entropy_sampling
+from modAL.models import ActiveLearner
+from modAL.uncertainty import uncertainty_sampling, margin_sampling, entropy_sampling
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC

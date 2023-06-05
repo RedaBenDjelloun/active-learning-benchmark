@@ -3,7 +3,7 @@ scipy
 matplotlib
 tk
 scikit-learn
-modal
+modAL-python
 pandas
 streamlit
 protobuf

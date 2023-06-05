@@ -1,4 +1,4 @@
-from modal.models import ActiveLearner
+from modAL.models import ActiveLearner
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import WhiteKernel, RBF
 import matplotlib.pyplot as plt
