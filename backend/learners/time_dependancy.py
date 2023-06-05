@@ -1,5 +1,5 @@
-from modAL.models import ActiveLearner
-from modAL.uncertainty import uncertainty_sampling
+from modal.models import ActiveLearner
+from modal.uncertainty import uncertainty_sampling
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
