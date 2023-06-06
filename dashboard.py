@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+import numpy.random as rnd
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -23,6 +25,13 @@ st.sidebar.title('Active learning dashboard')
 data_generator_names = ['Two Gaussians', 'Not convex', 'Water level', 'Shift', 'Xor', 'Four Gaussians']
 classifier_names = ['Logistic Regression', 'Naive Bayes', 'SVM']
 query_strategy_names = ['Uncertainty sampling', 'Margin sampling', 'Entropy sampling']
+
+if "all_accuracies_learner" not in st.session_state:
+    st.session_state.all_accuracies_learner = np.array([])
+    st.session_state.all_accuracies_basic = np.array([])
+
+def update_seed():
+    rnd.seed(st.session_state.seed)
 
 # Functions to update session state
 def reinit_curve_data():
@@ -74,6 +83,18 @@ sbtab1, sbtab2, sbtab3, sbtab4 = st.sidebar.tabs(tabs)
 
 
 with sbtab1:
+    # Slider for the seed
+    if 'seed' not in st.session_state:
+        st.session_state.seed = 42,
+    
+    seed = st.slider(
+        'Seed',
+        0, 100, step=1,
+        key='seed',
+        on_change=update_seed,
+    )
+
+
     # Slider for the dimension
     if 'dimension' not in st.session_state:
         st.session_state.dimension = 100
@@ -281,9 +302,6 @@ with tab1:
 
 # Add a plot for the benchmark with plotly
 with tab2:
-    if "all_accuracies_learner" not in st.session_state:
-        st.session_state.all_accuracies_learner = np.array([])
-        st.session_state.all_accuracies_basic = np.array([])
     while_loop_entered = False
     while(len(st.session_state.all_accuracies_learner)<st.session_state.nb_replications_max):
         while_loop_entered = True
