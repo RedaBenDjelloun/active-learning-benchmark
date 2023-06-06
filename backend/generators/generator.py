@@ -262,6 +262,18 @@ def two_gaussians(dim,std):
     lst_gen.append(GaussianGenerator(-target,std))
     return DataGenerators(lst_gen)
 
+def four_gaussians(dim=2,std=0.5):
+    target = np.zeros(dim)
+    target[0] = 1
+    lst_gen = []
+    lst_gen.append(GaussianGenerator(target.copy(),std))
+    lst_gen.append(GaussianGenerator(-target.copy(),std))
+    target[0] = 0
+    target[1] = 1
+    lst_gen.append(GaussianGenerator(target.copy(),std))
+    lst_gen.append(GaussianGenerator(-target.copy(),std))
+    return DataGenerators(lst_gen)
+
 def not_convex(dim=2,noise=0.1):
     generators = []
     center_std = 0.7/np.sqrt(dim)
@@ -281,7 +293,7 @@ def display_classes(X,y):
 
 if __name__ == "__main__":
 
-    data_generator = xor_gen()
+    data_generator = four_gaussians(2,0.5)
 
     X,y = data_generator.generate_data(1000)
 

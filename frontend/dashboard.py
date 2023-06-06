@@ -14,13 +14,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
-from generators.generator import GaussianGenerator, DataGenerators, not_convex, xor_gen
+from generators.generator import GaussianGenerator, DataGenerators, not_convex, xor_gen, four_gaussians
 from learners.comparator import create_two_gaussians, construct_learner, generate_dataset, compute_accuracies, plot_accuracies, do_benchmark, create_SVC
 from learners.time_dependancy import construct_water_level_data_generator, compute_time_accuracies, construct_shift_data_generator
 
 st.sidebar.title('Active learning dashboard')
 
-data_generator_names = ['Two Gaussians', 'Not convex', 'Water level', 'Shift', 'Xor']
+data_generator_names = ['Two Gaussians', 'Not convex', 'Water level', 'Shift', 'Xor', 'Four Gaussians']
 classifier_names = ['Logistic Regression', 'Naive Bayes', 'SVM']
 query_strategy_names = ['Uncertainty sampling', 'Margin sampling', 'Entropy sampling']
 
@@ -46,6 +46,9 @@ def update_data_generator():
     elif st.session_state.data_generator_name == 'Shift':
         st.session_state.data_generator =  construct_shift_data_generator(dim=st.session_state.dimension)
         st.session_state.data_generator2D = construct_shift_data_generator(dim=2)
+    elif st.session_state.data_generator_name == 'Four Gaussians':
+        st.session_state.data_generator = four_gaussians(dim=st.session_state.dimension)
+        st.session_state.data_generator2D = four_gaussians(dim=2)
 
 def update_classifier():
     reinit_curve_data()
