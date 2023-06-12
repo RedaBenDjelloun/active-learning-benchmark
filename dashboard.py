@@ -236,7 +236,7 @@ with sbtab4:
 
     # Slider for gamma parameter
     if 'gamma' not in st.session_state:
-        st.session_state.gamma = 0.5
+        st.session_state.gamma = 0.3
 
     gamma = st.slider(
         'Discount factor',
