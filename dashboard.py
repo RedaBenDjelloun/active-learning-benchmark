@@ -22,7 +22,7 @@ from learners.time_dependancy import construct_water_level_data_generator, compu
 
 st.sidebar.title('Active learning dashboard')
 
-data_generator_names = ['Two Gaussians', 'Not convex', 'Water level', 'Shift', 'Xor', 'Four Gaussians']
+data_generator_names = ['Two Gaussians', 'Concentric spheres', 'Water level', 'Shift', 'Xor', 'Four Gaussians']
 classifier_names = ['Logistic Regression', 'Naive Bayes', 'SVM']
 query_strategy_names = ['Uncertainty sampling', 'Margin sampling', 'Entropy sampling']
 
@@ -43,7 +43,7 @@ def update_data_generator():
     if st.session_state.data_generator_name == 'Two Gaussians':
         st.session_state.data_generator = create_two_gaussians(dim=st.session_state.dimension, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
         st.session_state.data_generator2D = create_two_gaussians(dim=2, first_dim_mean=1, first_dim_std=0.5, other_dim_stds=1)
-    elif st.session_state.data_generator_name == 'Not convex':
+    elif st.session_state.data_generator_name == 'Concentric spheres':
         st.session_state.data_generator = not_convex(dim=st.session_state.dimension)
         st.session_state.data_generator2D = not_convex(dim=2)
     elif st.session_state.data_generator_name == 'Water level':
